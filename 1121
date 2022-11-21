@@ -1,0 +1,26 @@
+def L1_to_L2(private_key):
+    address = Account.from_key(private_key).address
+    print(address)
+    abi = json.loads(open('abi.txt', 'r').read())
+    print(abi)
+    value = round(random.uniform(0.5, 0.6), 3)
+    gas = random.randint(115948, 120000)
+    contract_addres = web3.toChecksumAddress('0x94cf11667b017e9fef7ab557e2ef9eff6fdfedc3')
+    # 实例化合约（校验后地址，abi）
+    contract = web3.eth.contract(web3.toChecksumAddress('0x94cf11667b017e9fef7ab557e2ef9eff6fdfedc3'), abi=abi)
+    contract_function = contract.functions.depositETH(2000000)
+    params = {
+        "from": address,
+        'gasPrice': web3.eth.gas_price,  # 单价
+        'value':web3.toWei(value, 'ether'),
+        # "gas": 200000,  # 最高
+        "nonce": web3.eth.getTransactionCount(address),  # 获取交易序号
+    }
+    tx = contract_function.buildTransaction(params)
+    signed_tx = web3.eth.account.signTransaction(tx, private_key=private_key)
+    tx_hash = web3.eth.sendRawTransaction(signed_tx.rawTransaction)
+    result = web3.eth.wait_for_transaction_receipt(tx_hash.hex(), timeout=120, poll_latency=0.1)
+    if result['status'] == 1:
+        print(address + '交易成功，哈希：' + str(tx_hash.hex()))
+    else:
+        print(result)
